@@ -1,0 +1,73 @@
+import type { DataSource } from "../../../../src"
+import "../../../utils/test-setup"
+import {
+    closeTestingConnections,
+    createTestingConnections,
+    reloadTestingDatabases,
+} from "../../../utils/test-utils"
+import { Post } from "./entity/Post"
+
+describe("json > defaults", () => {
+    let dataSources: DataSource[]
+    before(async () => {
+        dataSources = await createTestingConnections({
+            entities: [Post],
+            enabledDrivers: [
+                "postgres",
+                "cockroachdb",
+                "better-sqlite3",
+                "sqljs",
+            ],
+        })
+    })
+    beforeEach(() => reloadTestingDatabases(dataSources))
+    after(() => closeTestingConnections(dataSources))
+
+    it("should insert default values properly", () =>
+        Promise.all(
+            dataSources.map(async (dataSource) => {
+                const post1 = new Post()
+                post1.title = "Post #1"
+                await dataSource.manager.save(post1)
+
+                const loadedPost1 = await dataSource.manager.findBy(Post, {
+                    title: "Post #1",
+                })
+                loadedPost1.should.be.eql([
+                    {
+                        id: 1,
+                        title: "Post #1",
+                        authors: ["Dmitry", "Olimjon"],
+                        category: { name: "TypeScript" },
+                        categories: [{ name: "TypeScript" }],
+                    },
+                ])
+
+                const post2 = new Post()
+                post2.title = "Post #2"
+                post2.authors = [`Umed`, `Dmitry`]
+                post2.category = { name: "JavaScript" }
+                post2.categories = [
+                    { name: "JavaScript" },
+                    { name: "ECMAScript" },
+                ]
+                await dataSource.manager.save(post2)
+
+                const loadedPost2 = await dataSource.manager.findBy(Post, {
+                    title: "Post #2",
+                })
+                loadedPost2.should.be.eql([
+                    {
+                        id: 2,
+                        title: "Post #2",
+                        authors: ["Umed", "Dmitry"],
+                        category: { name: "JavaScript" },
+                        categories: [
+                            { name: "JavaScript" },
+                            { name: "ECMAScript" },
+                        ],
+                    },
+                ])
+            }),
+        ))
+})

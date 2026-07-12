@@ -1,0 +1,41 @@
+name: tests-windows
+
+on:
+  workflow_call:
+    inputs:
+      node-version:
+        required: true
+        type: number
+
+jobs:
+  better-sqlite3:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: ./.github/actions/setup-node
+        with:
+          node-version: ${{ inputs.node-version }}
+          download-build: true
+
+      - run: jq 'map(select(.type == "better-sqlite3"))' ormconfig.sample.json > ormconfig.json
+      - run: pnpm exec c8 pnpm run test:ci
+
+      - uses: ./.github/actions/upload-coverage
+        with:
+          name: better-sqlite3-node-${{ inputs.node-version }}-windows
+
+  sqljs:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: ./.github/actions/setup-node
+        with:
+          node-version: ${{ inputs.node-version }}
+          download-build: true
+
+      - run: jq 'map(select(.type == "sqljs"))' ormconfig.sample.json > ormconfig.json
+      - run: pnpm exec c8 pnpm run test:ci
+
+      - uses: ./.github/actions/upload-coverage
+        with:
+          name: sqljs-node-${{ inputs.node-version }}-windows

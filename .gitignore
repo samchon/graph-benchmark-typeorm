@@ -1,0 +1,30 @@
+### macOS ###
+.DS_Store
+._*
+
+### Node ###
+.pnpm-store/
+build/
+coverage/
+node_modules/
+.nvmrc
+.node-version
+*.lcov
+
+### VisualStudioCode ###
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+
+### JetBrains ###
+.idea/
+*.iml
+
+### TypeORM ###
+temp/
+ormconfig.json
+ormlogs.log
+
+### Stryker ###
+reports/
+.stryker-tmp

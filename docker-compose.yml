@@ -1,0 +1,158 @@
+services:
+  # mysql
+  mysql-5:
+    image: "mysql:5.7.44"
+    container_name: "typeorm-mysql-5"
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: "admin"
+      MYSQL_USER: "username"
+      MYSQL_PASSWORD: "password"
+      MYSQL_DATABASE: "typeorm"
+
+  mysql-9:
+    image: "mysql:9.5.0"
+    container_name: "typeorm-mysql-9"
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: "admin"
+      MYSQL_USER: "username"
+      MYSQL_PASSWORD: "password"
+      MYSQL_DATABASE: "typeorm"
+
+  # mariadb
+  mariadb-10:
+    image: "mariadb:10.11.16"
+    container_name: "typeorm-mariadb-10"
+    ports:
+      - "3307:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: "admin"
+      MYSQL_USER: "username"
+      MYSQL_PASSWORD: "password"
+      MYSQL_DATABASE: "typeorm"
+
+  mariadb-12:
+    image: "mariadb:12.2.2"
+    container_name: "typeorm-mariadb-12"
+    ports:
+      - "3307:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: "admin"
+      MYSQL_USER: "username"
+      MYSQL_PASSWORD: "password"
+      MYSQL_DATABASE: "typeorm"
+
+  # postgres
+  postgres-14:
+    # postgis is postgres + PostGIS (only). If you need additional extensions,
+    # it's probably time to create a purpose-built image.
+    image: "ghcr.io/typeorm/docker:postgres-14.22-postgis-3.6.2-pgvector-0.8.2"
+    container_name: "typeorm-postgres-14"
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: "username"
+      POSTGRES_PASSWORD: "password"
+      POSTGRES_DB: "typeorm"
+
+  # postgres
+  postgres-17:
+    # postgis is postgres + PostGIS (only). If you need additional extensions,
+    # it's probably time to create a purpose-built image.
+    image: "ghcr.io/typeorm/docker:postgres-17.9-postgis-3.6.2-pgvector-0.8.2"
+    container_name: "typeorm-postgres-17"
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: "username"
+      POSTGRES_PASSWORD: "password"
+      POSTGRES_DB: "typeorm"
+
+  # mssql
+  mssql:
+    image: "mcr.microsoft.com/mssql/server:2025-latest"
+    container_name: "typeorm-mssql"
+    ports:
+      - "1433:1433"
+    environment:
+      SA_PASSWORD: "Admin12345"
+      ACCEPT_EULA: "Y"
+      MSSQL_PID: "Express"
+
+  # cockroachdb
+  cockroachdb:
+    image: "cockroachdb/cockroach:v24.3.8"
+    container_name: "typeorm-cockroachdb"
+    command: "start-single-node --insecure --cache=.25 --store=type=mem,size=.25"
+    ports:
+      - "26257:26257"
+    healthcheck:
+      test: ["CMD", "cockroach", "sql", "--insecure", "-e", "SELECT 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    # volumes:
+    #   - cockroach-data:/cockroach/cockroach-data
+
+    # oracle
+  oracle:
+    image: "container-registry.oracle.com/database/free:23.7.0.0-lite"
+    container_name: "typeorm-oracle"
+    ports:
+      - "1521:1521"
+    environment:
+      ORACLE_PWD: "oracle"
+      ORACLE_SID: "FREE"
+    volumes:
+      # - oracle-data:/opt/oracle/oradata
+      - ./docker/oracle/startup:/opt/oracle/scripts/startup:ro
+
+  # spanner
+  spanner:
+    image: roryq/spanner-emulator:latest
+    container_name: "typeorm-spanner"
+    ports:
+      - "9010:9010"
+      - "9020:9020"
+    environment:
+      SPANNER_PROJECT_ID: "typeorm"
+      SPANNER_INSTANCE_ID: "typeorm"
+      SPANNER_DATABASE_ID: "typeorm"
+
+  # sap hana
+  # works only on linux, minimum 10GB RAM for docker required
+  hanaexpress:
+    image: "saplabs/hanaexpress:2.00.088.00.20251110.1"
+    container_name: "typeorm-hanaexpress"
+    hostname: hxe
+    command:
+      [
+        "--agree-to-sap-license",
+        "--passwords-url",
+        "file:////hana/hxe-config.json",
+      ]
+    ulimits:
+      nofile: 1048576
+    sysctls:
+      - kernel.shmall=3145728 # System-wide limit of total shared memory, in 4k pages
+      - kernel.shmmax=1073741824 # Maximum shared memory segment sizes
+      - kernel.shmmni=4096 # Maximum number of shared memory segments
+      - net.ipv4.ip_local_port_range=40000 60999
+    volumes:
+      - /hana/mounts
+      - ./docker/hana/hxe-config.json:/hana/hxe-config.json:ro
+    ports:
+      - "39041:39041"
+    healthcheck:
+      test: "/hana/shared/HXE/exe/linuxx86_64/hdb/hdbsql -n localhost:39041 -u SYSTEM -p HXEHana1 \"\\s\""
+      interval: 5s
+
+  # mongodb
+  mongodb:
+    image: "mongo:8.2.5"
+    container_name: "typeorm-mongodb"
+    ports:
+      - "27017:27017"
